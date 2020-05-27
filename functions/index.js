@@ -25,19 +25,102 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     /*tiempo no elegido por el usuario*/
     var error_tiempo = false;
     /*Tiempo verbal que selecciono el usuario*/
-    var tiempo_verbal ="";
-    // Ejercicios simple present
-    var exercise_present = [['she _____ (not/work)in a hospital', "doesn't works",'does not works' ],['she ___(work) in a hospital', 'works']
-        ['___ she ____(work) play basketball?', "doesn't works",'does not works' ]];
+    var tiempo_verbal = 0;
+    var ejercicio = 0;
+
+    /* Ejercicio simple present*/
+    var exercise_present = [
+        { oracion:'Ben  ____ (work) in a hospital',
+            parametros : ['verbo'],//nombre intent
+            tipo_parametros: ['verbo_presente'], // tipo de intent
+            correcto: '¡Correcto!, continúa practicando',
+            incorrecto:'La respuesta correcta es Ben works in a hospital\n' +
+                'Recuerda que con las terceras personas (she, he, it) el verbo termina en -s, -es. Inténtalo  de nuevo con esta oración:\n',
+        },
+        { oracion: `Ben  ____ (not/work) in a hospital`,
+            parametros : ['verbo','verbo_auxiliar'], //Nombre intent
+            tipo_parametros: ['does', 'verbo_presente' ], // tipo de intent
+            correcto: 'Perfecto, veamos si puedes con esta oración',
+            incorrecto: 'La respuesta correcta es Ben works in a hospital\n' +
+                'Recuerda que con las terceras personas (she, he, it) el verbo termina en -s, -es. Inténtalo  de nuevo con esta oración:\n'
+        },
+        { oracion:'She _____ (not/teach) English.',
+            parametros : ['verbo', 'verbo_auxiliar'],
+            tipo_parametros: [ 'does','verbo_presente'],
+            correcto: '¡Muy bien! continua :)',
+            incorrecto: 'No :( la respuesta correcta es She does not teach (doesn’t teach) English. ',
+        },
+        { oracion:'_____ she _____ (play) football?',
+            parametros : ['verbo', 'verbo_auxiliar'], // Nombre intent
+            tipo_parametros: ['verbo_presente', 'does'], // tipo intent
+            correcto: '¡Correcto! ',
+            incorrecto: 'Casi… La respuesta correcta es “Does she play football?” ¿Quieres seguir practicando?\n' +
+                '\n',
+        },
+
+     ];
+
+
+    var exercise_future =[
+        { oracion:'I promise I ____ (study) for the exam after the game.',
+            parametros : ['verbo'],//nombre intent
+            tipo_parametros: ['verbo_presente'], // tipo de intent
+            correcto: '¡Correcto!, continúa practicando',
+            incorrecto: 'La respuesta correcta es I promise I will study for the exam after the game.\n' +
+                'Se utiliza "will" para expresar una promesa. Inténtalo  de nuevo con esta oración:\n',
+        },
+        { oracion: `The concert ____ (start) at 10pm.`,
+            parametros : ['verbo','verbo_auxiliar'], //Nombre intent
+            tipo_parametros: ['does', 'verbo_presente' ], // tipo de intent
+            correcto: '¡Muy bien! continua :)',
+            incorrecto: 'No :( la respuesta correcta es The concert starts at 10pm.',
+        },
+        { oracion: `I ____ (clean) my room after school.`,
+            parametros : ['verbo','verbo_auxiliar'], //Nombre intent
+            tipo_parametros: ['does', 'verbo_presente' ], // tipo de intent
+            correcto: '¡Perfecto! Sigue practicando :)',
+            incorrecto: 'Buen intento :) La respuesta correcta es I will clean my room after school.',
+        }, { oracion: `_____ she _____ (play) football? `,
+            parametros : ['verbo','verbo_auxiliar'], //Nombre intent
+            tipo_parametros: ['does', 'verbo_presente' ], // tipo de intent
+            correcto: '¡Correcto! ',
+            incorrecto: `Casi… La respuesta correcta es “Will she play football?”`,
+        }, { oracion: `___ you ____ (help) me with my homework?.`,
+            parametros : ['verbo','verbo_auxiliar'], //Nombre intent
+            tipo_parametros: ['does', 'verbo_presente' ], // tipo de intent
+            correcto: '¡Correcto!, Eres muy bueno sigue así ',
+            incorrecto: 'upps, la respuesta correcta es: will help me with my homework?'
+            ,
+        }
+    ];
+
+
+    var exercise_past = [
+        { oracion:' ___ she played yestarday? ',
+            parametros : ['verbo'],//nombre intent
+            tipo_parametros: ['verbo_pasado'], // tipo de intent
+            correcto: '',
+            incorrecto: '',
+        },
+        { oracion: `I promise I ____ (study) for the exam after the game.`,
+            parametros : ['verbo','verbo_auxiliar'], //Nombre intent
+            tipo_parametros: ['does', 'verbo_presente' ], // tipo de intent
+            correcto: '',
+            incorrecto: '',
+        }
+    ];
+
     
     
-    function repasar(agent) {
+    function practicar(agent) {
         var t = agent.parameters.tiempo;
+
         if(t  === "Presente"){
-            tiempo_verbal = "Presente";
-            agent.add(`Vamos a repasar el presente simple`);
-            // TODO: mostrar el ejercicio del presente simple
-            //TODO : avisar a repasar oracion que ejerecicio fue
+            // pasamos a una siguiente actividad
+            tiempo_verbal = 0;
+            ejercicio = 0;
+            agent.add(exercise_present[0].oracion);
+
 
         } if (t=== "Futuro"){
             tiempo_verbal = "Futuro";
@@ -51,58 +134,26 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
             // TODO: mostrar el ejercicio del pasado simple
             //TODO : avisar a repasar oracion que ejerecicio fue
 
-        }else {
-            agent.add("¿Que tiempo te gustaría repasar?");
-            error_tiempo = true;
         }
     }
+    
+     function practicar_ejercicio(agent) {
+        var v  = agent.parameters.verbo;
 
-
-    function repasartiempo(agent){
-        /*Si el usuario no selecciono el tiempo verbal*/
-        if(error_tiempo = true){
-            /*seleccionamos el tiempo verbal*/
-            var t = agent.parameters.tiempo;
-
-            if(t  === "Presente"){
-                agent.add(`Vamos a repasar el presente simple`);
-                agent.add("La siguiente oración  está en simple present, completala:");
-                agent.add(exercise_present[0][0]);
-                // TODO: mostrar el ejercicio del presente simple
-                //TODO : avisar a repasar oracion que ejerecicio fue
-            } if (t=== "Futuro"){
-                agent.add(`Vamos a repasar el futuro simple`);
-                agent.add("La siguiente oración  está en simple present, completala:");
-                agent.add(exercise_present[0][0]);
-                // TODO: mostrar el ejercicio del futuro simple
-                //TODO : avisar a repasar oracion que ejerecicio fue
-            } if (t === "Pasado"){
-                agent.add(`Vamos a repasar el pasado simple`);
-                agent.add("La siguiente oración  está en simple present, completala:");
-                agent.add(exercise_present[0][0]);
-                // TODO: mostrar el ejercicio del futuro simple
-                //TODO : avisar a repasar oracion que ejerecicio fue
+        if(tiempo_verbal === 0){
+            if(v === "verbo_presente"){
+                agent.add(exercise_present[0].correcto);
             }
         }
-    }
 
 
-    function repasaroracion(agent) {
-        //TODO: checar que ejercicio es y hacer la revisión
-        if(tiempo_verbal  === "Presente"){
-            /*verificamos el ejercicio*/
-            agent.add(`ejercicio  presente simple`);
-            // TODO: mostrar  los siguientes 5 ejercicios
-        } if (tiempo_verbal === "Futuro"){
-            /*verificamos el ejercicio*/
-            agent.add(`ejercicio  futuro simple`);
 
-        } if (tiempo_verbal === "Pasado"){
-            /*verificamos el ejercicio*/
-            agent.add(`ejercicio pasado simple`);
+     }
 
-        }
-    }
+
+
+    /**
+
 
     /**
      *  Funcion que maneja el intent aprender
@@ -173,9 +224,9 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     let intentMap = new Map();
 
     intentMap.set('aprender', aprender);
-    intentMap.set('repasar', repasar);
-    intentMap.set('repasar-tiempo',repasartiempo);
-    intentMap.set('repasar-oracion',repasaroracion);
+    intentMap.set('practicar', practicar);
+    intentMap.set('practicar-ejercicio', practicar_ejercicio);
+
     agent.handleRequest(intentMap);
 });
 
